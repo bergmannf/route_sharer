@@ -24,12 +24,12 @@ calculate xs = let sumDist = sumRouteDistance xs
                in
                 calculatePartOfJourney sumDist xs []
 
-data Flag = Input String
+data Flag = Cost String | Person String deriving (Eq, Show)
 
 options :: [OptDescr Flag]
 options = [
-  Option "c" ["cost"] (ReqArg Input "STRING") "Total cost of the trip.",
-  Option "p" ["passenger"] (ReqArg Input "STRING") "Passenger as part of the trip."
+  Option "c" ["cost"] (ReqArg Cost "STRING") "Total cost of the trip.",
+  Option "p" ["passenger"] (ReqArg Person "STRING") "Passenger as part of the trip."
   ]
 
 parsePassenger :: String -> [Passenger]
@@ -37,22 +37,23 @@ parsePassenger s = case T.splitOn (T.pack ",") (T.pack s) of
   n:d:_ -> [Passenger ( T.unpack n )  ( read $ T.unpack d :: Float )]
   _ -> []
 
-parseOpts :: ([OptDescr Flag], [String]) -> (Float, [Passenger]) -> (Float, [Passenger])
-parseOpts ([], []) (x, y) = (x, y)
-parseOpts ([], []) _ = (0, [])
-parseOpts (x:xs, y:ys) (c, pass) = case x of
-  Option "c" _ _ _ -> parseOpts (xs, ys) (read y :: Float, pass)
-  Option "p" _ _ _ -> parseOpts (xs, ys) (c, parsePassenger y ++ pass)
-  _ -> (c, pass)
+parseOpts :: [Flag] -> (Float, [Passenger]) -> (Float, [Passenger])
+parseOpts [] (x, y) = (x, y)
+parseOpts (x:xs) (c, pass) = case x of
+   Cost x -> parseOpts xs (read x :: Float, pass)
+   Person x -> parseOpts xs (c, parsePassenger x ++ pass)
 
 main :: IO [Float]
 main = do
   args <- getArgs
-  let header = "Usage"
   let received = case getOpt RequireOrder options args of
         (opts, values, []) -> Just (opts, values)
         (_, _, errors) -> Nothing
-  case received of
-   Just a -> print $ length $ fst a
-   Nothing -> print "Error on usage"
-  return [1.0]
+  (cost, passengers) <- case received of
+   Just (flags, args) -> do
+     let (c, p) = (parseOpts flags (0, []))
+     print (c, p)
+     return (c, p)
+   Nothing -> return (0, [])
+  let rel_cost = map (\p -> wayFraction p * cost) $ calculate passengers
+  return rel_cost
