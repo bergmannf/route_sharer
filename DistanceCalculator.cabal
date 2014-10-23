@@ -16,17 +16,17 @@ cabal-version:       >=1.8
 
 executable DistanceCalculator
   hs-source-dirs: src
-  main-is:             Dist.hs
+  main-is: Dist.hs
   -- other-modules:       
-  build-depends:       base ==4.6.*
-                     , containers
+  build-depends: base ==4.6.*
+               , containers
 
 library
   hs-source-dirs: src
-  build-depends:       base ==4.6.*
+  build-depends: base ==4.6.*
   exposed-modules: Dist
-  build-depends:       base ==4.6.*
-                     , containers
+  build-depends: base ==4.6.*
+               , containers
 
 test-suite Tests
   hs-source-dirs: test
