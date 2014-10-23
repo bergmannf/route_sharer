@@ -20,6 +20,7 @@ executable DistanceCalculator
   -- other-modules:       
   build-depends: base ==4.6.*
                , containers
+               , text
 
 library
   hs-source-dirs: src
@@ -27,6 +28,7 @@ library
   exposed-modules: Dist
   build-depends: base ==4.6.*
                , containers
+               , text
 
 test-suite Tests
   hs-source-dirs: test
