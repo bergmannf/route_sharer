@@ -43,8 +43,10 @@ parsePassenger s = case T.splitOn (T.pack ",") (T.pack s) of
 parseOpts :: [Flag] -> (Float, [Passenger]) -> (Float, [Passenger])
 parseOpts [] (x, y) = (x, y)
 parseOpts (x:xs) (c, pass) = case x of
-   Cost x -> parseOpts xs (read x :: Float, pass)
-   Person x -> case parsePassenger x of
+   Cost cost -> case reads cost :: [(Float, String)] of
+     [(co, "")] -> parseOpts xs (co, pass)
+     _ -> parseOpts xs (0, pass)
+   Person passenger -> case parsePassenger passenger of
      Right p -> parseOpts xs (c, p : pass)
      Left _ -> parseOpts xs (c, pass)
 
@@ -53,7 +55,7 @@ main = do
   args <- getArgs
   let received = case getOpt RequireOrder options args of
         (opts, values, []) -> Just (opts, values)
-        (_, _, errors) -> Nothing
+        (_, _, _) -> Nothing
   (cost, passengers) <- case received of
    Just (flags, args) -> do
      let (c, p) = parseOpts flags (0, [])
