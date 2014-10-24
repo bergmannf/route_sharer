@@ -1,7 +1,8 @@
 module Dist where
+import Data.Either (Either)
+import qualified Data.Text as T
 import System.Environment
 import System.Console.GetOpt
-import qualified Data.Text as T
 
 data Passenger = Passenger { name :: String
                            , distance :: Float}
@@ -32,16 +33,20 @@ options = [
   Option "p" ["passenger"] (ReqArg Person "STRING") "Passenger as part of the trip."
   ]
 
-parsePassenger :: String -> [Passenger]
+parsePassenger :: String -> Either String Passenger
 parsePassenger s = case T.splitOn (T.pack ",") (T.pack s) of
-  n:d:_ -> [Passenger ( T.unpack n )  ( read $ T.unpack d :: Float )]
-  _ -> []
+  n:d:_ -> case reads $ T.unpack d :: [(Float, String)] of
+    [(f, "")] -> Right $ Passenger ( T.unpack n ) f
+    _ -> Left "Failed when parsing the float"
+  _ -> Left "Not enough (or too little) fields"
 
 parseOpts :: [Flag] -> (Float, [Passenger]) -> (Float, [Passenger])
 parseOpts [] (x, y) = (x, y)
 parseOpts (x:xs) (c, pass) = case x of
    Cost x -> parseOpts xs (read x :: Float, pass)
-   Person x -> parseOpts xs (c, parsePassenger x ++ pass)
+   Person x -> case parsePassenger x of
+     Right p -> parseOpts xs (c, p : pass)
+     Left _ -> parseOpts xs (c, pass)
 
 main :: IO [Float]
 main = do
@@ -51,7 +56,7 @@ main = do
         (_, _, errors) -> Nothing
   (cost, passengers) <- case received of
    Just (flags, args) -> do
-     let (c, p) = (parseOpts flags (0, []))
+     let (c, p) = parseOpts flags (0, [])
      print (c, p)
      return (c, p)
    Nothing -> return (0, [])
