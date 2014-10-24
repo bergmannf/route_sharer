@@ -1,5 +1,4 @@
 module Dist where
-import Data.Either (Either)
 import qualified Data.Text as T
 import System.Environment
 import System.Console.GetOpt
@@ -50,7 +49,7 @@ parseOpts (x:xs) (c, pass) = case x of
      Right p -> parseOpts xs (c, p : pass)
      Left _ -> parseOpts xs (c, pass)
 
-main :: IO [Float]
+main :: IO [(Passenger, Float)]
 main = do
   args <- getArgs
   let received = case getOpt RequireOrder options args of
@@ -62,5 +61,5 @@ main = do
      print (c, p)
      return (c, p)
    Nothing -> return (0, [])
-  let rel_cost = map (\p -> wayFraction p * cost) $ calculate passengers
+  let rel_cost = map (\p -> (p, wayFraction p * cost)) $ calculate passengers
   return rel_cost
